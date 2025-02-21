@@ -4,6 +4,7 @@ import CustomException.CustomException;
 import Json.Json;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -26,28 +27,25 @@ public class ConfigurationManager {
 
     //todo: criar customs e separar trycatch
     public void loadConfigurationFile(String filepath) {
-        try {
-            FileReader fileReader = new FileReader(filepath);
-            StringBuffer stringBuffer = new StringBuffer();
-            int i = fileReader.read();
-            while (i != EOF) {
-                //I don't quite understand why we must explicitly cast i as a char here
-                stringBuffer.append((char) i);
-                i++;
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filepath))) {
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                stringBuilder.append(line).append("\n");
             }
-            JsonNode configuration = Json.parse(stringBuffer.toString());
-            //instantiates the Configuration class based on the json file
+
+            JsonNode configuration = Json.parse(stringBuilder.toString());
             currentConfiguration = Json.fromJson(configuration, Configuration.class);
-            fileReader.close();
         } catch (IOException e) {
-            e.printStackTrace(
-            );
+            e.printStackTrace();
         }
     }
 
-    public void getCurrentConfiguration(){
+
+    public Configuration getCurrentConfiguration(){
         if (currentConfiguration == null){
             throw new CustomException.HttpConfigurationException("Erro ao configurar servidor");
         }
+        return currentConfiguration;
     }
 }
