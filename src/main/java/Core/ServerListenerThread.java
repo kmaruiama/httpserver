@@ -25,31 +25,15 @@ public class ServerListenerThread extends Thread {
 
     @Override
     public void run(){
-        //como há apenas uma thread, as requests são processadas individualmente, uma após a outra
-        //not good!!!
         try {
             while (serverSocket.isBound() && !serverSocket.isClosed()) {
+                //essa classe só vai servir para lidar com as sockets e passar elas pro
                 Socket socket = serverSocket.accept();
                 logger.info("Connection accepted, Ip: " + socket.getInetAddress());
-                InputStream inputStream = socket.getInputStream();
-                OutputStream outputStream = socket.getOutputStream();
-
-                String html = "<html><h1>Oi mundo :)</h1></html>";
-                final String CRLF = "\n\r";
-                //como eu nao estou explicitamente dizendo o que servir, o navegador vai
-                //tentar adivinhar. adicionar no header o tipo
-                String response =
-                        "HTTP/1.1 200 OK " + CRLF // status
-                                + "Content Length: " + html.getBytes().length + CRLF // header
-                                + CRLF + html + CRLF + CRLF;
-
-                outputStream.write(response.getBytes());
-                inputStream.close();
-                outputStream.close();
-                socket.close();
+                ConnectionHandlerThread connectionHandlerThread = new ConnectionHandlerThread(socket);
+                connectionHandlerThread.start();
             }
-            // serverSocket.close();
-        } catch (IOException e){
+        } catch (IOException e) {
             logger.error("Error at ServerListenerThread: " + e.getCause() + "  " + e.getMessage());
         }
     }
